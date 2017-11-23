@@ -14,8 +14,9 @@ class TestMoveSequence(play.Play):
                             'immediately')
 
         #arbitrary points to move to
-        positions = [robocup.Point(0, 1.5), robocup.Point(2, 0),
-                     robocup.Point(0, 3), robocup.Point(-3, 0)]
+        #positions = [robocup.Point(1, 0), robocup.Point(2, 0),
+        #             robocup.Point(0, 3), robocup.Point(-3, 0)]
+        positions  = [robocup.Point(0.5,0)]
         sequence = single_robot_sequence.SingleRobotSequence(
             repeat=True,
             behaviors=list(map(skills.move_158.Move, positions)))

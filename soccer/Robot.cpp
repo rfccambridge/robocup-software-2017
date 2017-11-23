@@ -218,16 +218,17 @@ void OurRobot::move_158(Geometry2d::Point goal, Geometry2d::Point endVelocity) {
 
    // _motionCommand = std::make_unique<Planning::PathTargetCommand>(
     //    MotionInstant(goal, endVelocity));
-     int temp = this->shell();
-    printf("id is: %d     asdf",temp);
+   //debug here
+    // int temp = this->shell();
+    // printf("id is: %d     asdf",temp);
     //printf("%s",(_state->self[1])->toString());
     double test = 1.10;
-    this->control->set_xvelocity(test);
-    this->control->set_yvelocity(0);
-
-    *_cmdText << "move(" << goal.x() << ", " << goal.y() << ")" << endl;
-    *_cmdText << "endVelocity(" << endVelocity.x() << ", " << endVelocity.y()
-              << ")" << endl;
+    this->control->set_xvelocity(goal.x());
+    this->control->set_yvelocity(goal.y());
+    cout << "c++ move(" << goal.x() << ", " << goal.y() << ")" << endl;
+   // *_cmdText << "move(" << goal.x() << ", " << goal.y() << ")" << endl;
+   // *_cmdText << "endVelocity(" << endVelocity.x() << ", " << endVelocity.y()
+     //         << ")" << endl;
 
 }
 
