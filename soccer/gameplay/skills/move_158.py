@@ -2,6 +2,7 @@ import single_robot_behavior
 import behavior
 import robocup
 import time
+import numpy
 ## Behavior that moves a robot to a specified location
 # wraps up OurRobot.move() into a Skill so we can use it in the play system more easily
 class Move(single_robot_behavior.SingleRobotBehavior):
@@ -51,8 +52,9 @@ class Move(single_robot_behavior.SingleRobotBehavior):
     def execute_running(self):
         #print(self._start_time)
         self._time = time.time()
-        speeds = [robocup.Point(1, 0), robocup.Point(0, 0),robocup.Point(-1, 0),robocup.Point(0, 0)]#,
-                    # robocup.Point(0, 1), robocup.Point(0, -1)]
+        speeds = [robocup.Point(1, 0)]#, robocup.Point(-1, 0),
+                     #robocup.Point(0, 1), robocup.Point(0, -1)]
+        print(self.robot.angle)
         #print(type(speeds[1]))
         # start = time.time()
         #print(speeds[self._x])
@@ -62,7 +64,8 @@ class Move(single_robot_behavior.SingleRobotBehavior):
                 self._x = self._x+1
                 if(self._x == 4):
                     self._x = 0
-            self.robot.move_to_158(speeds[self._x])
+            self.robot.move_to_158(speeds[self._x], robocup.Point(3, -1))
+
         #if self.pos != None:
         #    self.robot.move_to_158(self.pos)
 

@@ -211,7 +211,8 @@ void MotionControl::_targetAngleVel(float angleVel) {
     }
 
     // the robot firmware still speaks degrees, so that's how we send it over
-    _robot->control->set_avelocity(angleVel);
+    //printf("%6.4lf",angleVel); 
+    //_robot->control->set_avelocity(angleVel);
 }
 
 void MotionControl::_targetBodyVel(Point targetVel) {

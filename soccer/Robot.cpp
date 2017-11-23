@@ -210,7 +210,7 @@ void OurRobot::move(Geometry2d::Point goal, Geometry2d::Point endVelocity) {
 
 void OurRobot::move_158(Geometry2d::Point goal, Geometry2d::Point endVelocity) {
     if (!visible) return;
-
+  
     // sets flags for future movement
     if (verbose)
         cout << " in OurRobot::move(goal): adding a goal (" << goal.x() << ", "
@@ -222,10 +222,11 @@ void OurRobot::move_158(Geometry2d::Point goal, Geometry2d::Point endVelocity) {
     // int temp = this->shell();
     // printf("id is: %d     asdf",temp);
     //printf("%s",(_state->self[1])->toString());
-    double test = 1.10;
     this->control->set_xvelocity(goal.x());
     this->control->set_yvelocity(goal.y());
-    cout << "c++ move(" << goal.x() << ", " << goal.y() << ")" << endl;
+    this->control->set_avelocity(endVelocity.x());
+   // cout << "c++ angle(" << angleVel  << ")" << endl;
+    cout << "c++ move(" << goal.x() << ", " << goal.y() << "angle: " << endVelocity.x() <<")" << endl;
    // *_cmdText << "move(" << goal.x() << ", " << goal.y() << ")" << endl;
    // *_cmdText << "endVelocity(" << endVelocity.x() << ", " << endVelocity.y()
      //         << ")" << endl;

@@ -122,9 +122,9 @@ void OurRobot_move_to(OurRobot* self, Geometry2d::Point* to) {
     self->move(*to);
 }
 
-void OurRobot_move_to_158(OurRobot* self, Geometry2d::Point* to) {
+void OurRobot_move_to_158(OurRobot* self, Geometry2d::Point* to, Geometry2d::Point* ang) {
     if (to == nullptr) throw NullArgumentException("to");
-    self->move_158(*to);
+    self->move_158(*to,*ang);
 }
 
 void OurRobot_add_local_obstacle(OurRobot* self, Geometry2d::Shape* obs) {
