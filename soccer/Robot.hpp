@@ -229,6 +229,9 @@ public:
     void move(Geometry2d::Point goal,
               Geometry2d::Point endVelocity = Geometry2d::Point());
 
+
+    void move_158(Geometry2d::Point goal,
+              Geometry2d::Point endVelocity = Geometry2d::Point());
     /**
      * @brief Move to a given point bypassing the RRT Path planner. This will
      * plan a direct path ignoring all obstacles and the starting velocity

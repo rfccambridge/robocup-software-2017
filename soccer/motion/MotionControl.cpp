@@ -167,6 +167,7 @@ void MotionControl::run() {
 
     // PID on position
     target.vel.x() += _positionXController.run(posError.x());
+   // cout << "PID pos: " << target.vel.x() << std::endl;
     target.vel.y() += _positionYController.run(posError.y());
 
     // draw target pt
@@ -238,8 +239,14 @@ void MotionControl::_targetBodyVel(Point targetVel) {
     }
 
     // set control values
-    _robot->control->set_xvelocity(targetVel.x());
-    _robot->control->set_yvelocity(targetVel.y());
+   // _robot->control->set_xvelocity(targetVel.x());
+  // if(_robot->shell() == 1){
+    //printf("%d \n",targetVel.x());
+   // cout.precision(5);
+  //  cout << "target vel" << targetVel.x() << endl;
+    //printf("%s", _robot->vel.toString());
+//}
+   // _robot->control->set_yvelocity(targetVel.y());
 }
 
 Pid* MotionControl::getPid(char controller) {

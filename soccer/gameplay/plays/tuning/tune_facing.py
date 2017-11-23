@@ -66,7 +66,7 @@ class Facer(single_robot_composite_behavior.SingleRobotCompositeBehavior):
         self.remove_subbehavior('hold')
 
     def done_pausing(self):
-        return (time.time() - self.pause_start_time) > 1.5
+        return (time.time() - self.pause_start_time) > 0.5
 
 
 ## This play rotates the bot 90 degrees, pauses, and repeats

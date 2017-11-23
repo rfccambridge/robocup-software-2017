@@ -201,10 +201,34 @@ void OurRobot::move(Geometry2d::Point goal, Geometry2d::Point endVelocity) {
 
     _motionCommand = std::make_unique<Planning::PathTargetCommand>(
         MotionInstant(goal, endVelocity));
+    int temp = this->shell();
+    //printf("id is: %d     asdf",temp);
+    *_cmdText << "move(" << goal.x() << ", " << goal.y() << ")" << endl;
+    *_cmdText << "endVelocity(" << endVelocity.x() << ", " << endVelocity.y()
+              << ")" << endl;
+}
+
+void OurRobot::move_158(Geometry2d::Point goal, Geometry2d::Point endVelocity) {
+    if (!visible) return;
+
+    // sets flags for future movement
+    if (verbose)
+        cout << " in OurRobot::move(goal): adding a goal (" << goal.x() << ", "
+             << goal.y() << ")" << std::endl;
+
+   // _motionCommand = std::make_unique<Planning::PathTargetCommand>(
+    //    MotionInstant(goal, endVelocity));
+     int temp = this->shell();
+    printf("id is: %d     asdf",temp);
+    //printf("%s",(_state->self[1])->toString());
+    double test = 1.10;
+    this->control->set_xvelocity(test);
+    this->control->set_yvelocity(0);
 
     *_cmdText << "move(" << goal.x() << ", " << goal.y() << ")" << endl;
     *_cmdText << "endVelocity(" << endVelocity.x() << ", " << endVelocity.y()
               << ")" << endl;
+
 }
 
 void OurRobot::lineKick(Point target) {

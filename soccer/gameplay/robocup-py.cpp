@@ -122,6 +122,11 @@ void OurRobot_move_to(OurRobot* self, Geometry2d::Point* to) {
     self->move(*to);
 }
 
+void OurRobot_move_to_158(OurRobot* self, Geometry2d::Point* to) {
+    if (to == nullptr) throw NullArgumentException("to");
+    self->move_158(*to);
+}
+
 void OurRobot_add_local_obstacle(OurRobot* self, Geometry2d::Shape* obs) {
     if (obs == nullptr) throw NullArgumentException("obs");
     std::shared_ptr<Geometry2d::Shape> sharedObs(obs->clone());
@@ -778,6 +783,7 @@ BOOST_PYTHON_MODULE(robocup) {
     class_<OurRobot, OurRobot*, bases<Robot>, boost::noncopyable>(
         "OurRobot", init<int, SystemState*>())
         .def("move_to", &OurRobot_move_to)
+        .def("move_to_158",&OurRobot_move_to_158)
         .def("move_to_end_vel", &OurRobot_move_to_end_vel)
         .def("move_to_direct", &OurRobot_move_to_direct)
         .def("move_tuning", &OurRobot_move_tuning)

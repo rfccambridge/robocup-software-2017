@@ -4,7 +4,7 @@ import skills.move
 import behavior
 import constants
 import math
-
+import main
 
 ## A simple behavior to make a robot move to a given point and face a given direction
 # note: probably not overly useful in real plays, but is useful for testing purposes
@@ -61,8 +61,14 @@ class Face(single_robot_composite_behavior.SingleRobotCompositeBehavior):
             return False
 
     def calculate_face_target(self):
-        return self.pos + robocup.Point(
-            math.cos(self.angle), math.sin(self.angle))
+        return main.ball().pos
+        #return self.pos + robocup.Point(
+        #    math.cos(self.angle), math.sin(self.angle))
+        #print(self.pos + robocup.Point(
+        #    math.cos(self.angle), math.sin(self.angle)))
 
     def execute_running(self):
         self.robot.face(self.calculate_face_target())
+        #print(main.ball().pos)
+        #print(self.pos + robocup.Point(
+        #    math.cos(self.angle), math.sin(self.angle)))

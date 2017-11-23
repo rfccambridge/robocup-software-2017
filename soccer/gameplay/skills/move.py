@@ -42,9 +42,13 @@ class Move(single_robot_behavior.SingleRobotBehavior):
     def threshold(self, value):
         self._threshold = value
 
+    def print_info(self):
+        print(self.robot.pos)
+
     def execute_running(self):
+        #print(self.robot.pos)
         if self.pos != None:
-            self.robot.move_to(self.pos)
+            self.robot.move_to_158(self.pos)
 
     def role_requirements(self):
         reqs = super().role_requirements()
