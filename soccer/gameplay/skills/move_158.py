@@ -2,7 +2,8 @@ import single_robot_behavior
 import behavior
 import robocup
 import time
-import numpy
+import numpy as np
+import math
 ## Behavior that moves a robot to a specified location
 # wraps up OurRobot.move() into a Skill so we can use it in the play system more easily
 class Move(single_robot_behavior.SingleRobotBehavior):
@@ -49,27 +50,57 @@ class Move(single_robot_behavior.SingleRobotBehavior):
     def print_info(self):
         print(self.robot.pos)
 
+    
+
     def execute_running(self):
         #print(self._start_time)
         self._time = time.time()
-        speeds = [robocup.Point(1, 0)]#, robocup.Point(-1, 0),
-                     #robocup.Point(0, 1), robocup.Point(0, -1)]
-        print(self.robot.angle)
+        
+
+        #print(self.robot.pos.y)
+        point = helpers.timed_test(self)
+        vx = point.x
+        vy = point.y
+        theta = 3
+        thetaobs = self.robot.angle
+        A = [[math.cos(thetaobs),math.sin(thetaobs),0],[-math.sin(thetaobs),math.cos(thetaobs),0],[0,0,1]]
+        X = [vx,vy,theta]
+        OUTPUT = np.dot(A,X)
+        print(OUTPUT)
+        self.robot.move_to_158(robocup.Point(OUTPUT[0], OUTPUT[1]), robocup.Point(OUTPUT[2], 0))
+
+
         #print(type(speeds[1]))
         # start = time.time()
         #print(speeds[self._x])
-        if self.pos != None:
-            if self._time  - self._start_time >1:
-                self._start_time =time.time()
-                self._x = self._x+1
-                if(self._x == 4):
-                    self._x = 0
-            self.robot.move_to_158(speeds[self._x], robocup.Point(3, -1))
-
+       
+        #helpers.test_ymove(self)
         #if self.pos != None:
         #    self.robot.move_to_158(self.pos)
-
+   
     def role_requirements(self):
         reqs = super().role_requirements()
         reqs.destination_shape = self.pos
         return reqs
+
+class helpers(single_robot_behavior.SingleRobotBehavior):
+    def __init__(self):
+        self.name = helpers
+    def test_ymove(self):
+        if(self.robot.pos.y > 1.1):
+            self.robot.move_to_158(robocup.Point(0, -1), robocup.Point(0, 0))
+        elif(self.robot.pos.y < 0.99):
+            self.robot.move_to_158(robocup.Point(0, 1), robocup.Point(0, 0))
+    def timed_test(self):
+        speeds = [robocup.Point(1, 0), robocup.Point(-1, 0), robocup.Point(0, 1), robocup.Point(0, -1)]
+        if self.pos != None:
+            if self._time  - self._start_time >2:
+                self._start_time =time.time()
+                self._x = self._x+1
+                if(self._x == 4):
+                    self._x = 0
+        return(speeds[self._x])
+            #self.robot.move_to_158(speeds[self._x], robocup.Point(3, -1))
+    def calctraj(self):
+        timestep = 0.01
+        
