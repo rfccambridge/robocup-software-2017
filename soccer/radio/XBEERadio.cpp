@@ -2,6 +2,8 @@
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
+#include <chrono>
+#include <thread>
 
 #include "XBEERadio.hpp"
 
@@ -41,11 +43,6 @@ XBEERadio::XBEERadio(std::string usbport) {
         xbee_log(xbee, -1, "xbee_conNew() returned: %d (%s)", ret, xbee_errorToStr(ret));
         std::cout<<"Something went wrong with setting up the connection" << std::endl;
     }
-
-    for (int i = 0; i < 1000; i++) {
-        xbee_conTx(con, NULL, "%d\r\n", i);
-    }
-
 }
 
 
@@ -64,15 +61,29 @@ bool XBEERadio::isOpen() const {
 
 
 void XBEERadio::send(Packet::RadioTx& packet) {
-
+    send_broadcast(packet);
 }
 
-void send_broadcast(Packet::RadioTx& packet) {
-
+void XBEERadio::send_broadcast(Packet::RadioTx& packet) {
+    for (int i = 0; i < 1000; i++) {
+        xbee_conTx(con, NULL, "Hello World\r\n", i);
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
 }
+
+void xbee_callback(struct xbee *xbee, struct xbee_con *con, struct xbee_pkt **pkt, void **data) {
+    if ((*pkt)->dataLen == 0) {
+        std::cout << "Packet too short" << std::endl;
+        return;
+    }
+    printf("rx: [%s]\n", (*pkt)->data);
+}
+
 
 void XBEERadio::receive() {
-
+    if ((ret = xbee_conCallbackSet(con, xbee_callback, NULL)) != XBEE_ENONE) {
+        xbee_log(xbee, -1, "xbee_callback_setting returned %d:", ret);
+    }
 }
 
 void XBEERadio::channel(int n) {
