@@ -118,10 +118,12 @@ endif()
 include_directories(SYSTEM ${LIBUSB_1_INCLUDE_DIRS})
 
 # libxbee
-set(XBEE_LIBRARY_DIRECTORY "${CMAKE_SOURCE_DIR}/common/include/xbee")
-find_path(${XBEE_LIBRARY_DIRECTORY} xbee.h)
-find_path(${XBEE_LIBRARY_DIRECTORY} xbeep.h)
+set(XBEE_LIBRARY_DIRECTORY "${PROJECT_SOURCE_DIR}/common/include/xbee")
+set(XBEE_STATICLIB_DIRECTORY "${PROJECT_SOURCE_DIR}/common/include")
+link_directories(${XBEE_LIBRARY_DIRECTORY})
+link_directories(${XBEE_STATICLIB_DIRECTORY})
 include_directories(${XBEE_LIBRARY_DIRECTORY})
+include_directories(${XBEE_STATICLIB_DIRECTORY})
 
 
 # SDL
