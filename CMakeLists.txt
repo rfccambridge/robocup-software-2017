@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project("GT RoboJackets RoboCup")
+project("RFCCambridge Robocup")
 
 # include cmake files in the 'cmake folder'
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
@@ -122,6 +122,8 @@ include_directories("${PROJECT_SOURCE_DIR}/common") # for headers in common/
 include_directories("${PROJECT_BINARY_DIR}/common") # for generated protobuf headers
 include_directories("${CMAKE_BINARY_DIR}/common") # for generated protobuf headers
 
+include_directories("${PROJECT_SOURCE_DIR}/common/include") # for external includes
+include_directories("${PROJECT_SOURCE_DIR}/common/include/xbee") # for xbee wireless 
 
 # setup ccache to speed up recompiles.  It's especially useful when switching back and forth
 # between branches where you'd normally have to recompile things many times.
