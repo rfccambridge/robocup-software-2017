@@ -4,6 +4,7 @@
 #include <fstream>
 #include <chrono>
 #include <thread>
+#include <sstream>
 
 #include "XBEERadio.hpp"
 
@@ -11,6 +12,7 @@ static const int Control_Timeout = 1000;
 
 static const char* XBEE_MODE = "xbee1";
 static const char* XBEE_DATATYPE = "64-bit Data";
+static const int NUM_ROBOT_SLOTS = 6;
 
 
 XBEERadio::XBEERadio() {
@@ -23,7 +25,7 @@ XBEERadio::XBEERadio(int id) {
 
 XBEERadio::XBEERadio(std::string usbport) {
     // Default on Ubuntu is "/dev/ttyUSB0"
-    if ((ret = xbee_setup(&xbee, XBEE_MODE, usbport, 57600)) != XBEE_ENONE) {
+    if ((ret = xbee_setup(&xbee, XBEE_MODE, usbport.c_str(), 57600)) != XBEE_ENONE) {
         printf("ret: %d (%s)\n", ret, xbee_errorToStr(ret));
         std::cout<< "[Error]: XBEE not found" << std::endl;
     }
@@ -38,11 +40,18 @@ XBEERadio::XBEERadio(std::string usbport) {
     address.addr64[5] = 0x00;
     address.addr64[6] = 0xFF;
     address.addr64[7] = 0xFF;
+    /* 0x000000000000FFFF is the default broadcast address */
+
+    xbee_logLevelSet(xbee, 100); 
 
     if ((ret = xbee_conNew(xbee, &con, XBEE_DATATYPE, &address)) != XBEE_ENONE) {
         xbee_log(xbee, -1, "xbee_conNew() returned: %d (%s)", ret, xbee_errorToStr(ret));
         std::cout<<"Something went wrong with setting up the connection" << std::endl;
     }
+
+    xbee_conSettings(con, NULL, &settings);
+    settings.disableAck = 1;
+    xbee_conSettings(con, &settings, NULL);
 }
 
 
@@ -61,12 +70,42 @@ bool XBEERadio::isOpen() const {
 
 
 void XBEERadio::send(Packet::RadioTx& packet) {
-    send_broadcast(packet);
+    std::stringstream ss;
+    ss << ">>>STARTMESSAGE<<<" << std::endl;
+    for (int slot = 0; slot < NUM_ROBOT_SLOTS; slot++) {
+        if (slot < packet.robots_size()) {
+            ss << ">>>STARTROBOT<<<" << std::endl;
+            const Packet::Control &robot = packet.robots(slot).control();
+            ss << packet.robots(slot).uid() << std::endl;
+            ss << static_cast<int16_t>(robot.xvelocity()) << std::endl;
+            ss << static_cast<int16_t>(robot.yvelocity()) << std::endl;
+            ss << static_cast<int16_t>(robot.avelocity()) << std::endl;
+            ss << static_cast<uint16_t>(robot.dvelocity()) << std::endl;
+            ss << robot.kcstrength() << std::endl;
+            ss << robot.shootmode() << std::endl;
+            ss << robot.triggermode() << std::endl;
+            ss << robot.song() << std::endl;
+            ss << ">>>ENDROBOT<<<" << std::endl;
+        }
+    }
+    ss << ">>>ENDMESSAGE<<<" << std::endl;
+    std::string message = ss.str();
+    std::cout << message << std::endl;
+    xbee_conTx(con, NULL, "%s\r\n", message.c_str());
 }
 
 void XBEERadio::send_broadcast(Packet::RadioTx& packet) {
-    for (int i = 0; i < 1000; i++) {
-        xbee_conTx(con, NULL, "Hello World\r\n", i);
+    for (int i = 0; i < 10; i++) {
+        xbee_conTx(con, NULL, "%d\r\n", i);
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+}
+
+void XBEERadio::send_debug_message(std::string msg) {
+    char buf[4096];
+    snprintf(buf, 4096, "%s\r\n", msg.c_str());
+    for (int i = 0; i < 5; i++) {
+        xbee_conTx(con, NULL, "%s\r\n", msg.c_str());
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 }

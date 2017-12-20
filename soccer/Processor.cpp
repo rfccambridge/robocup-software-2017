@@ -26,6 +26,7 @@
 #include "modeling/BallTracker.hpp"
 #include "radio/SimRadio.hpp"
 #include "radio/USBRadio.hpp"
+#include "radio/XBEERadio.hpp"
 
 #include "firmware-common/common2015/utils/DebugCommunicationStrings.hpp"
 
@@ -101,6 +102,58 @@ Processor::Processor(bool sim, bool defendPlus, VisionChannel visionChannel)
     // Create radio socket
     _radio = _simulation ? static_cast<Radio*>(new SimRadio(_state, _blueTeam))
                          : static_cast<Radio*>(new USBRadio());
+}
+
+Processor::Processor(bool sim, bool defendPlus, VisionChannel visionChannel, bool xbee)
+    : _loopMutex() {
+    _running = true;
+    _manualID = -1;
+    _framerate = 0;
+    _useOurHalf = true;
+    _useOpponentHalf = true;
+    _initialized = false;
+    _simulation = sim;
+    _radio = nullptr;
+    _xbee = xbee;
+
+    // joysticks
+    _joysticks.push_back(new GamepadController());
+    _joysticks.push_back(new SpaceNavJoystick());
+    // Enable this if you have issues with the new controller.
+    // _joysticks.push_back(new GamepadJoystick());
+
+    _dampedTranslation = true;
+    _dampedRotation = true;
+
+    _kickOnBreakBeam = false;
+
+    // Initialize team-space transformation
+    defendPlusX(defendPlus);
+
+    QMetaObject::connectSlotsByName(this);
+
+    _ballTracker = std::make_shared<BallTracker>();
+    _refereeModule = std::make_shared<NewRefereeModule>(_state);
+    _refereeModule->start();
+    _gameplayModule = std::make_shared<Gameplay::GameplayModule>(&_state);
+    _pathPlanner = std::unique_ptr<Planning::MultiRobotPathPlanner>(
+        new Planning::IndependentMultiRobotPathPlanner());
+    vision.simulation = _simulation;
+    if (sim) {
+        vision.port = SimVisionPort;
+    }
+    vision.start();
+
+    _visionChannel = visionChannel;
+
+    // Create radio socket
+    if (_xbee) {
+        _radio = new XBEERadio("/dev/ttyUSB0");
+    } else if (_simulation) {
+        _radio = new SimRadio(_state, _blueTeam);
+    } else {
+        _radio = static_cast<Radio*>(new USBRadio());
+    }    
 }
 
 Processor::~Processor() {

@@ -41,6 +41,7 @@ void usage(const char* prog) {
             "\t-defend:     specify half of field to defend (plus or minus)\n");
     fprintf(stderr,
             "\t-vision      specify the vision channel (1,2, or full)\n");
+    fprintf(stderr,"\t-xbee      use xbee radio controller\n");
     exit(0);
 }
 
@@ -68,6 +69,7 @@ int main(int argc, char* argv[]) {
     QString cfgFile;
     vector<const char*> playDirs;
     bool sim = false;
+    bool xbee = false;
     bool log = true;
     QString radioFreq;
     string playbookFile;
@@ -86,6 +88,8 @@ int main(int argc, char* argv[]) {
             blueTeam = true;
         } else if (strcmp(var, "-sim") == 0) {
             sim = true;
+        } else if (strcmp(var, "-xbee") == 0) {
+            xbee = true;
         } else if (strcmp(var, "-nolog") == 0) {
             log = false;
         } else if (strcmp(var, "-freq") == 0) {
@@ -154,6 +158,7 @@ int main(int argc, char* argv[]) {
     }
 
     printf("Running on %s\n", sim ? "simulation" : "real hardware\n");
+    printf("Using xbee: %s\n", xbee ? "true" : "false");
 
     printf("seed %016lx\n", seed);
     srand48(seed);
@@ -168,7 +173,7 @@ int main(int argc, char* argv[]) {
         Configuration::FromRegisteredConfigurables();
 
     auto processor =
-        std::make_unique<Processor>(sim, defendPlus, visionChannel);
+        std::make_unique<Processor>(sim, defendPlus, visionChannel, xbee);
     processor->blueTeam(blueTeam);
     processor->refereeModule()->useExternalReferee(!noref);
 

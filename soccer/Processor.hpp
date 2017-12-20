@@ -92,6 +92,7 @@ public:
     static void createConfiguration(Configuration* cfg);
 
     Processor(bool sim, bool defendPlus, VisionChannel visionChannel);
+    Processor(bool sim, bool defendPlus, VisionChannel visionChannel, bool xbee);
     virtual ~Processor();
 
     void stop();
@@ -232,6 +233,11 @@ private:
     Logger _logger;
 
     Radio* _radio;
+
+
+    // True if we are using XBEE radio communcation
+    // Will override all simulator communications
+    bool _xbee;
 
     bool _useOurHalf, _useOpponentHalf;
 
