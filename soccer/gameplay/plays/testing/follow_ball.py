@@ -4,7 +4,7 @@ import play
 import enum
 import behavior
 import main
-import skills.move
+import skills.move_id
 import plays.testing.line_up
 import time
 
@@ -50,7 +50,7 @@ class FollowBall(play.Play):
 		print('Ball doing nothing')
 		move_point = robocup.Point(self.ball_pos.x+0.1, self.ball_pos.y-0.1)
 		self.add_subbehavior(
-			skills.move.Move(move_point), 'Robot' + str(1))
+			skills.move_id.Move(move_point, 2), 'Robot' + str(1))
 
 	def execute_noting(self):
 		print('Execute Nothing')
