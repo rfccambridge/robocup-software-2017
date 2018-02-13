@@ -140,6 +140,11 @@ void USBRadio::rxCompleted(libusb_transfer* transfer) {
     libusb_submit_transfer(transfer);
 }
 
+void USBRadio::send(std::string packet) {
+    return;
+}
+
+
 void USBRadio::command(uint8_t cmd) {
     if (libusb_control_transfer(_device,
                                 LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_VENDOR,

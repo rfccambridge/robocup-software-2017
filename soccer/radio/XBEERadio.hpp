@@ -2,6 +2,7 @@
 
 #include "Radio.hpp"
 #include <xbee.h>
+#include "ShittyPacket.hpp"
 
 #include <mutex>
 
@@ -22,6 +23,7 @@ class XBEERadio : public Radio {
         virtual bool isOpen() const override;
         virtual void send(Packet::RadioTx& packet) override;
         virtual void receive() override;
+        virtual void send(std::string packet) override;
         void send_debug_message(std::string msg); 
 
         virtual void channel(int n) override;

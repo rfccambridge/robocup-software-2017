@@ -15,6 +15,7 @@ public:
 
     virtual bool isOpen() const = 0;
     virtual void send(Packet::RadioTx& packet) = 0;
+    virtual void send(std::string packet) = 0;
     virtual void receive() = 0;
 
     virtual void switchTeam(bool blueTeam) = 0;

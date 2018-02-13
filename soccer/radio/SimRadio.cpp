@@ -7,6 +7,8 @@
 #include <Robot.hpp>
 #include <Utils.hpp>
 #include <stdexcept>
+#include <iostream>
+#include "ShittyPacket.hpp"
 
 #include "firmware-common/robot2015/cpu/status.h"
 
@@ -18,11 +20,13 @@ static QHostAddress LocalAddress(QHostAddress::LocalHost);
 SimRadio::SimRadio(SystemState& system_state, bool blueTeam)
     : _state(system_state), _blueTeam(blueTeam) {
     switchTeam(blueTeam);
+    xbee = new XBEERadio();
 }
 
 bool SimRadio::isOpen() const { return _tx_socket.isValid(); }
 
 void SimRadio::send(Packet::RadioTx& packet) {
+    // std::cout << static_cast<void*>(packet) << std::endl;
     grSim_Packet simPacket;
     grSim_Commands* simRobotCommands = simPacket.mutable_commands();
     for (int i = 0; i < packet.robots_size(); i++) {
@@ -60,6 +64,12 @@ void SimRadio::send(Packet::RadioTx& packet) {
 
         simRobot->set_spinner(robot.control().dvelocity() > 0);
         simRobot->set_wheelsspeed(false);
+
+        ShittyPacket packet;
+        packet.robot_x = static_cast<int>(robot.control().xvelocity()*256);
+        packet.robot_y = static_cast<int>(robot.control().yvelocity()*256);
+        packet.robot_w = static_cast<int>(robot.control().avelocity()*256);
+        xbee->send(packet.serialize());
     }
     simRobotCommands->set_isteamyellow(!_blueTeam);
     simRobotCommands->set_timestamp(RJ::timestamp());
@@ -69,6 +79,12 @@ void SimRadio::send(Packet::RadioTx& packet) {
     _tx_socket.writeDatagram(&out[0], out.size(),
                              QHostAddress(QHostAddress::LocalHost),
                              SimCommandPort);
+
+}
+
+void SimRadio::send(std::string packet) {
+    exit(1);
+    return;
 }
 
 void SimRadio::receive() {

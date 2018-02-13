@@ -27,9 +27,9 @@
 #include "radio/SimRadio.hpp"
 #include "radio/USBRadio.hpp"
 #include "radio/XBEERadio.hpp"
+#include "radio/ShittyPacket.hpp"
 
 #include "firmware-common/common2015/utils/DebugCommunicationStrings.hpp"
-
 REGISTER_CONFIGURABLE(Processor)
 
 using namespace std;
@@ -100,8 +100,11 @@ Processor::Processor(bool sim, bool defendPlus, VisionChannel visionChannel)
     _visionChannel = visionChannel;
 
     // Create radio socket
+    //_radio = _simulation ? static_cast<Radio*>(new SimRadio(_state, _blueTeam))
+    //                     : static_cast<Radio*>(new USBRadio());
+
     _radio = _simulation ? static_cast<Radio*>(new SimRadio(_state, _blueTeam))
-                         : static_cast<Radio*>(new USBRadio());
+                         : static_cast<Radio*>(new XBEERadio());
 }
 
 Processor::Processor(bool sim, bool defendPlus, VisionChannel visionChannel, bool xbee)
@@ -145,15 +148,17 @@ Processor::Processor(bool sim, bool defendPlus, VisionChannel visionChannel, boo
     vision.start();
 
     _visionChannel = visionChannel;
-
+    
     // Create radio socket
     if (_xbee) {
-        _radio = new XBEERadio("/dev/ttyUSB0");
+        _radio = new XBEERadio();
     } else if (_simulation) {
         _radio = new SimRadio(_state, _blueTeam);
     } else {
         _radio = static_cast<Radio*>(new USBRadio());
     }    
+    
+    //_radio = static_cast<Radio*>(new XBEERadio());
 }
 
 Processor::~Processor() {
@@ -767,9 +772,10 @@ void Processor::updateGeometryPacket(const SSL_GeometryFieldSize& fieldSize) {
 }
 
 void Processor::sendRadioData() {
+    
     Packet::RadioTx* tx = _state.logFrame->mutable_radio_tx();
     tx->set_txmode(Packet::RadioTx::UNICAST);
-
+    
     // Halt overrides normal motion control, but not joystick
     if (_state.gameState.halt()) {
         // Force all motor speeds to zero
@@ -785,6 +791,39 @@ void Processor::sendRadioData() {
             control->set_song(Packet::Control::STOP);
         }
     }
+   /* ShittyPacket johnPacket;
+    if (_state.gameState.halt()) {
+         // Force all motor speeds to zero
+        for (OurRobot* r : _state.self) {
+
+            packet.robot_x = 0;
+            packet.robot_y = 0;
+            packet.robot_w = 0;
+        }
+    }
+
+
+
+    if(_state.gameState.halt()){
+        johnPacket.robot_x = 0;
+        johnPacket.robot_y = 0;
+        johnPacket.robot_w = 0;       
+    }else{
+        
+        for (OurRobot* r : _state.self) {
+            if (r->visible) {
+                johnPacket.robot_x = 2;
+                johnPacket.robot_y = 2;
+                johnPacket.robot_w = 2;
+                
+                // std::cout <<"Called" <<std::endl;
+                //johnPacket.robot_x = static_cast<int16_t>(r->control->xvelocity() * 256);
+                //johnPacket.robot_y = static_cast<int16_t>(r->control->yvelocity() * 256);
+                //johnPacket.robot_w = static_cast<int16_t>(r->control->avelocity() * 256);
+            }
+        }
+    }
+    */
 
     // Add RadioTx commands for visible robots and apply joystick input
     for (OurRobot* r : _state.self) {
@@ -819,10 +858,14 @@ void Processor::sendRadioData() {
         debugCommunication->set_key_name(
             DebugCommunication::DEBUGRESPONSE_TO_STRING.at(debugResponse));
     }
-
+    
+    
     if (_radio) {
         _radio->send(*_state.logFrame->mutable_radio_tx());
     }
+    
+    //std::cout << johnPacket.serialize() << std::endl;
+    //std::cout <<"Called this function" << std::endl;
 }
 
 void Processor::applyJoystickControls(const JoystickControlValues& controlVals,

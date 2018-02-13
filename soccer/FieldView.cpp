@@ -79,6 +79,7 @@ void FieldView::mouseMoveEvent(QMouseEvent* me) {
     s += " Y: ";
     s += QString::number(roundf(pos.y() * 100) / 100);
     _posLabel->setText(s);
+
 }
 
 std::shared_ptr<LogFrame> FieldView::currentFrame() {

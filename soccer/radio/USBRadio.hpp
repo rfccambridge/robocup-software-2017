@@ -31,6 +31,7 @@ public:
     virtual bool isOpen() const override;
     virtual void send(Packet::RadioTx& packet) override;
     virtual void receive() override;
+    virtual void send(std::string packet) override;
 
     virtual void channel(int n) override;
     void switchTeam(bool) override {}
