@@ -47,6 +47,8 @@ std::vector<RobotStatus*>
 
 Field_Dimensions* currentDimensions = &Field_Dimensions::Current_Dimensions;
 
+int xbeeControlTicks = 0;
+
 void Processor::createConfiguration(Configuration* cfg) {
     robotConfig2008 = new RobotConfig(cfg, "Rev2008");
     robotConfig2011 = new RobotConfig(cfg, "Rev2011");
@@ -150,15 +152,17 @@ Processor::Processor(bool sim, bool defendPlus, VisionChannel visionChannel, boo
     _visionChannel = visionChannel;
     
     // Create radio socket
+    // WFUEDIT
+    /*
     if (_xbee) {
         _radio = new XBEERadio();
     } else if (_simulation) {
         _radio = new SimRadio(_state, _blueTeam);
     } else {
         _radio = static_cast<Radio*>(new USBRadio());
-    }    
+    }    */
     
-    //_radio = static_cast<Radio*>(new XBEERadio());
+    _radio = static_cast<Radio*>(new XBEERadio());
 }
 
 Processor::~Processor() {
@@ -773,6 +777,7 @@ void Processor::updateGeometryPacket(const SSL_GeometryFieldSize& fieldSize) {
 
 void Processor::sendRadioData() {
     
+    /*
     Packet::RadioTx* tx = _state.logFrame->mutable_radio_tx();
     tx->set_txmode(Packet::RadioTx::UNICAST);
     
@@ -790,7 +795,10 @@ void Processor::sendRadioData() {
             control->set_triggermode(Packet::Control::STAND_DOWN);
             control->set_song(Packet::Control::STOP);
         }
-    }
+    }*/
+
+    
+
    /* ShittyPacket johnPacket;
     if (_state.gameState.halt()) {
          // Force all motor speeds to zero
@@ -826,8 +834,10 @@ void Processor::sendRadioData() {
     */
 
     // Add RadioTx commands for visible robots and apply joystick input
+    /*
     for (OurRobot* r : _state.self) {
         if (r->visible || _manualID == r->shell()) {
+            std::cout << "VISIBLE BOYS" <<std::endl;
             Packet::Robot* txRobot = tx->add_robots();
 
             // Copy motor commands.
@@ -842,8 +852,42 @@ void Processor::sendRadioData() {
                                       r);
             }
         }
-    }
+    }*/
 
+    const JoystickControlValues controlVals = getJoystickControlValues();
+    Geometry2d::Point translation(controlVals.translation);
+
+    ShittyPacket packet;
+    if (_state.gameState.halt()) {
+        packet.robot_x = 0;
+        packet.robot_y = 0;
+        packet.robot_w = 0;  
+        packet.robot_id = 0; 
+    } else {
+        // translation has a max of 0.7 on each scale
+        // max kickpower 255
+        // max dribblerpower 128
+        float scaleMovement = 1.0 + (float) controlVals.kickPower/100.0;
+        float scaleRotation = 1.0 + (float) controlVals.dribblerPower/50.0;
+        
+
+        packet.robot_x = static_cast<int16_t>(translation.x() * 100.0 * scaleMovement);
+        packet.robot_y = static_cast<int16_t>(translation.y() * 100.0 * scaleMovement);
+        packet.robot_w = static_cast<int16_t>(controlVals.rotation * 20.0 * scaleRotation);
+    }
+    //std::cout << "Current kickpower " << controlVals.kickPower << std::endl;
+    //std::cout << "Current dribblerpower " << controlVals.dribblerPower << std::endl; 
+    
+
+    // use world coordinates if we can see the robot
+    // otherwise default to body coordinates
+    /*
+    if (robot && robot->visible && _useFieldOrientedManualDrive) {
+        translation.rotate(-M_PI / 2 - robot->angle);
+    }*/
+
+
+    /*
     for (const auto& pair : _robotConfigs) {
         auto config = tx->add_configs();
         config->set_key(pair.first);
@@ -857,12 +901,20 @@ void Processor::sendRadioData() {
         debugCommunication->set_key(debugResponse);
         debugCommunication->set_key_name(
             DebugCommunication::DEBUGRESPONSE_TO_STRING.at(debugResponse));
-    }
+    }*/
     
-    
+    /*
     if (_radio) {
         _radio->send(*_state.logFrame->mutable_radio_tx());
+    }*/
+
+    if (xbeeControlTicks % 10 == 0) {
+        if (_radio) {
+            _radio->send(packet.serialize());
+        }
+        std::cout << "Called the XBEE" << std::endl;
     }
+    xbeeControlTicks++;
     
     //std::cout << johnPacket.serialize() << std::endl;
     //std::cout <<"Called this function" << std::endl;
