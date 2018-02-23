@@ -769,9 +769,14 @@ void Processor::updateGeometryPacket(const SSL_GeometryFieldSize& fieldSize) {
                  << endl;
             setFieldDimensions(newDim);
         }
+        
     } else {
         cerr << "Error: failed to decode SSL geometry packet. Not resizing "
                 "field." << endl;
+        std::cerr << fieldSize.field_length() << std::endl;
+        std::cerr << fieldSize.field_width() << std::endl;
+        std::cerr << fieldSize.goal_width() << std::endl;
+
     }
 }
 
@@ -854,6 +859,8 @@ void Processor::sendRadioData() {
         }
     }*/
 
+    //WFUEDIT
+
     const JoystickControlValues controlVals = getJoystickControlValues();
     Geometry2d::Point translation(controlVals.translation);
 
@@ -873,7 +880,7 @@ void Processor::sendRadioData() {
 
         packet.robot_x = static_cast<int16_t>(translation.x() * 100.0 * scaleMovement);
         packet.robot_y = static_cast<int16_t>(translation.y() * 100.0 * scaleMovement);
-        packet.robot_w = static_cast<int16_t>(controlVals.rotation * 20.0 * scaleRotation);
+        packet.robot_w = static_cast<int16_t>(controlVals.rotation * 5.0 * scaleRotation);
     }
     //std::cout << "Current kickpower " << controlVals.kickPower << std::endl;
     //std::cout << "Current dribblerpower " << controlVals.dribblerPower << std::endl; 

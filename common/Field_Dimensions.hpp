@@ -65,6 +65,8 @@ struct Field_Dimensions {
 
     static const Field_Dimensions Double_Field_Dimensions;
 
+    static const Field_Dimensions RFCCambridge_SMALL;
+
     static const Field_Dimensions Default_Dimensions;
 
     static Field_Dimensions Current_Dimensions;
