@@ -100,7 +100,8 @@ void XBEERadio::send(std::string packet) {
     xbee_conSettings(con, NULL, &settings);
     settings.disableAck = 1;
     xbee_conSettings(con, &settings, NULL);
-    xbee_conTx(con, NULL, "%s\r\n", packet.c_str());
+    if (con != NULL) 
+        xbee_conTx(con, NULL, "%s\r\n", packet.c_str());
     return;
 }
 

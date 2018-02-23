@@ -82,10 +82,10 @@ OurRobot::~OurRobot() {
 
 void OurRobot::addStatusText() {
     const QColor statusColor(255, 32, 32);
-
+    /*
     if (!rxIsFresh()) {
         addText("No RX", statusColor, "Status");
-    }
+    }*/
 }
 
 void OurRobot::addText(const QString& text, const QColor& qc,

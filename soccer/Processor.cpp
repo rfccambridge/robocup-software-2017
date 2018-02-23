@@ -48,6 +48,8 @@ std::vector<RobotStatus*>
 Field_Dimensions* currentDimensions = &Field_Dimensions::Current_Dimensions;
 
 int xbeeControlTicks = 0;
+auto xbeePacketSentTime = std::chrono::system_clock::now();
+const double XBEE_PACKET_DELAY = 0.05; // xbee packet delay in seconds
 
 void Processor::createConfiguration(Configuration* cfg) {
     robotConfig2008 = new RobotConfig(cfg, "Rev2008");
@@ -769,7 +771,7 @@ void Processor::updateGeometryPacket(const SSL_GeometryFieldSize& fieldSize) {
                  << endl;
             setFieldDimensions(newDim);
         }
-        
+
     } else {
         cerr << "Error: failed to decode SSL geometry packet. Not resizing "
                 "field." << endl;
@@ -915,14 +917,24 @@ void Processor::sendRadioData() {
         _radio->send(*_state.logFrame->mutable_radio_tx());
     }*/
 
+    /*
     if (xbeeControlTicks % 10 == 0) {
         if (_radio) {
             _radio->send(packet.serialize());
         }
         std::cout << "Called the XBEE" << std::endl;
-    }
-    xbeeControlTicks++;
-    
+    }*/
+    //xbeeControlTicks++;
+    auto currentTime = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = currentTime - xbeePacketSentTime;
+    if (elapsed_seconds.count() >= XBEE_PACKET_DELAY) {
+        if (_radio) {
+            _radio->send(packet.serialize());
+        }
+        std::cout << "Called the XBEE" << elapsed_seconds << std::endl;
+        xbeePacketSentTime = std::chrono::system_clock::now();
+    }  
+
     //std::cout << johnPacket.serialize() << std::endl;
     //std::cout <<"Called this function" << std::endl;
 }
