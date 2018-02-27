@@ -817,29 +817,6 @@ void Processor::sendRadioData() {
         }
     }
 
-
-
-    if(_state.gameState.halt()){
-        johnPacket.robot_x = 0;
-        johnPacket.robot_y = 0;
-        johnPacket.robot_w = 0;       
-    }else{
-        
-        for (OurRobot* r : _state.self) {
-            if (r->visible) {
-                johnPacket.robot_x = 2;
-                johnPacket.robot_y = 2;
-                johnPacket.robot_w = 2;
-                
-                // std::cout <<"Called" <<std::endl;
-                //johnPacket.robot_x = static_cast<int16_t>(r->control->xvelocity() * 256);
-                //johnPacket.robot_y = static_cast<int16_t>(r->control->yvelocity() * 256);
-                //johnPacket.robot_w = static_cast<int16_t>(r->control->avelocity() * 256);
-            }
-        }
-    }
-    */
-
     // Add RadioTx commands for visible robots and apply joystick input
     /*
     for (OurRobot* r : _state.self) {
@@ -862,7 +839,6 @@ void Processor::sendRadioData() {
     }*/
 
     //WFUEDIT
-
     const JoystickControlValues controlVals = getJoystickControlValues();
     Geometry2d::Point translation(controlVals.translation);
 
@@ -886,7 +862,6 @@ void Processor::sendRadioData() {
     }
     //std::cout << "Current kickpower " << controlVals.kickPower << std::endl;
     //std::cout << "Current dribblerpower " << controlVals.dribblerPower << std::endl; 
-    
 
     // use world coordinates if we can see the robot
     // otherwise default to body coordinates
@@ -917,26 +892,15 @@ void Processor::sendRadioData() {
         _radio->send(*_state.logFrame->mutable_radio_tx());
     }*/
 
-    /*
-    if (xbeeControlTicks % 10 == 0) {
-        if (_radio) {
-            _radio->send(packet.serialize());
-        }
-        std::cout << "Called the XBEE" << std::endl;
-    }*/
-    //xbeeControlTicks++;
     auto currentTime = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = currentTime - xbeePacketSentTime;
     if (elapsed_seconds.count() >= XBEE_PACKET_DELAY) {
         if (_radio) {
             _radio->send(packet.serialize());
         }
-        std::cout << "Called the XBEE" << elapsed_seconds << std::endl;
+        // std::cout << "Called the XBEE" << elapsed_seconds << std::endl;
         xbeePacketSentTime = std::chrono::system_clock::now();
     }  
-
-    //std::cout << johnPacket.serialize() << std::endl;
-    //std::cout <<"Called this function" << std::endl;
 }
 
 void Processor::applyJoystickControls(const JoystickControlValues& controlVals,
