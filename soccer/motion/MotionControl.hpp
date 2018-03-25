@@ -41,6 +41,11 @@ public:
 
     static void createConfiguration(Configuration* cfg);
 
+    float xvel = 0;
+    float yvel = 0;
+    float wvel = 0;
+    
+
 private:
     // sets the target velocity in the robot's radio packet
     // this method is used by both run() and stopped() and does the

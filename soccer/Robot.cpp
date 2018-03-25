@@ -100,6 +100,7 @@ void OurRobot::addText(const QString& text, const QColor& qc,
 
 bool OurRobot::avoidOpponents() const {
     // checks for avoiding all opponents
+    return false;
     for (size_t i = 0; i < Num_Shells; ++i) {
         if (_state->opp[i] && _state->opp[i]->visible &&
             _opp_avoid_mask[i] < 0.1)
@@ -192,7 +193,7 @@ void OurRobot::moveTuning(Geometry2d::Point goal, float endSpeed) {
 }
 
 void OurRobot::move(Geometry2d::Point goal, Geometry2d::Point endVelocity) {
-    if (!visible) return;
+    //if (!visible) return;
 
     // sets flags for future movement
     if (verbose)
@@ -205,6 +206,10 @@ void OurRobot::move(Geometry2d::Point goal, Geometry2d::Point endVelocity) {
     *_cmdText << "move(" << goal.x() << ", " << goal.y() << ")" << endl;
     *_cmdText << "endVelocity(" << endVelocity.x() << ", " << endVelocity.y()
               << ")" << endl;
+
+    //std::cout << "EHH GOOD MORNING" << std::endl;
+    //std::cout << goal.x() << "," << goal.y() << std::endl;
+    //std::cout << endVelocity.x() << "," << endVelocity.y() << std::endl;
 }
 
 void OurRobot::lineKick(Point target) {
@@ -251,6 +256,7 @@ const Geometry2d::Segment OurRobot::kickerBar() const {
 }
 
 bool OurRobot::behindBall(Geometry2d::Point ballPos) const {
+    
     Point ballTransformed = pointInRobotSpace(ballPos);
     return ballTransformed.x() < -Robot_Radius;
 }
@@ -352,10 +358,12 @@ void OurRobot::avoidAllOpponents(bool enable) {
 }
 
 bool OurRobot::avoidOpponent(unsigned shell_id) const {
+    return false;
     return _opp_avoid_mask[shell_id] > 0.0;
 }
 
 bool OurRobot::approachOpponent(unsigned shell_id) const {
+    return true;
     return avoidOpponent(shell_id) &&
            _opp_avoid_mask[shell_id] < Robot_Radius - 0.01;
 }
@@ -483,6 +491,7 @@ Geometry2d::ShapeSet OurRobot::collectAllObstacles(
 }
 
 bool OurRobot::charged() const {
+    return true;
     return _radioRx.has_kicker_status() && (_radioRx.kicker_status() & 0x01) &&
            rxIsFresh();
 }
@@ -493,31 +502,37 @@ bool OurRobot::hasBall() const {
 }
 
 bool OurRobot::ballSenseWorks() const {
+    return true;
     return rxIsFresh() && _radioRx.has_ball_sense_status() &&
            (_radioRx.ball_sense_status() == Packet::NoBall ||
             _radioRx.ball_sense_status() == Packet::HasBall);
 }
 
 bool OurRobot::kickerWorks() const {
+    return true;
     return _radioRx.has_kicker_status() &&
            (_radioRx.kicker_status() & Kicker_Enabled) && rxIsFresh();
 }
 
 bool OurRobot::chipper_available() const {
+    return true;
     return hardwareVersion() == Packet::RJ2011 && kickerWorks() &&
            *status->chipper_enabled;
 }
 
 bool OurRobot::kicker_available() const {
+    return true;
     return kickerWorks() && *status->kicker_enabled;
 }
 
 bool OurRobot::dribbler_available() const {
+    return true;
     return *status->dribbler_enabled && _radioRx.motor_status_size() == 5 &&
            _radioRx.motor_status(4) == Packet::Good;
 }
 
 bool OurRobot::driving_available(bool require_all) const {
+    return true;
     if (_radioRx.motor_status_size() != 5) return false;
     int c = 0;
     for (int i = 0; i < 4; ++i) {
@@ -556,6 +571,7 @@ boost::optional<Eigen::Quaternionf> OurRobot::quaternion() const {
 }
 
 bool OurRobot::rxIsFresh(RJ::Seconds age) const {
+    return true;
     return (RJ::now() - RJ::Time(chrono::microseconds(_radioRx.timestamp()))) <
            age;
 }

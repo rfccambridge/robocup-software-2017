@@ -12,7 +12,7 @@ static const int Control_Timeout = 1000;
 
 static const char* XBEE_MODE = "xbee1";
 static const char* XBEE_DATATYPE = "64-bit Data";
-static const char* XBEE_USBPORT = "/dev/ttyUSB0";
+static const char* XBEE_USBPORT = "/dev/ttyUSB1";
 static const int NUM_ROBOT_SLOTS = 6;
 static const int BAUD_RATE = 9600;
 

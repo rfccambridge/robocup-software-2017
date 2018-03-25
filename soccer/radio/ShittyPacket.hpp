@@ -13,7 +13,7 @@
  */
 class ShittyPacket {
     public:
-        uint8_t robot_id; // zero indexed
+        int16_t robot_id; // zero indexed
         int16_t robot_x; // velocity in x direction
         int16_t robot_y; // velocity in y direction
         int16_t robot_w; // omega, angular velocity
@@ -33,7 +33,8 @@ class ShittyPacket {
 
         std::string serialize() {
             std::ostringstream ss;
-            ss << robot_x << ","
+            ss << robot_id << ","
+            << robot_x << ","
             << robot_y << ","
             << robot_w;
             std::string message = ss.str();

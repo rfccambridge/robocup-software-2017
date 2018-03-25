@@ -806,20 +806,30 @@ void Processor::sendRadioData() {
 
     
 
-   /* ShittyPacket johnPacket;
+   
     if (_state.gameState.halt()) {
-         // Force all motor speeds to zero
-        for (OurRobot* r : _state.self) {
-
-            packet.robot_x = 0;
-            packet.robot_y = 0;
-            packet.robot_w = 0;
+        ShittyPacket johnPacket;
+            johnPacket.robot_id = -1;  //this is broadcast to all
+            johnPacket.robot_x = 0;
+            johnPacket.robot_y = 0;
+            johnPacket.robot_w = 0;
+        auto currentTime = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds = currentTime - xbeePacketSentTime;
+        if (elapsed_seconds.count() >= XBEE_PACKET_DELAY) {
+            if (_radio) {
+                _radio->send(johnPacket.serialize());
+            }  
+            johnPacket.robot_id = 0;
+            if (_radio) {
+                _radio->send(johnPacket.serialize());
+            }  
+            xbeePacketSentTime = std::chrono::system_clock::now();
         }
     }
 
     // Add RadioTx commands for visible robots and apply joystick input
-    /*
-    for (OurRobot* r : _state.self) {
+    
+    /*for (OurRobot* r : _state.self) {
         if (r->visible || _manualID == r->shell()) {
             std::cout << "VISIBLE BOYS" <<std::endl;
             Packet::Robot* txRobot = tx->add_robots();
@@ -827,16 +837,62 @@ void Processor::sendRadioData() {
             // Copy motor commands.
             // Even if we are using the joystick, this sets robot_id and the
             // number of motors.
-            txRobot->CopyFrom(r->robotPacket);
+            //txRobot->CopyFrom(r->robotPacket);
+            //std::cout << r->xvelocity() << "\n";
 
-            if (r->shell() == _manualID) {
-                const JoystickControlValues controlVals =
-                    getJoystickControlValues();
-                applyJoystickControls(controlVals, txRobot->mutable_control(),
-                                      r);
-            }
+            // if (r->shell() == _manualID) {
+            //     const JoystickControlValues controlVals =
+            //         getJoystickControlValues();
+            //     applyJoystickControls(controlVals, txRobot->mutable_control(),
+            //                           r);
+            // }
         }
     }*/
+    auto currentTime = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = currentTime - xbeePacketSentTime;
+    if (elapsed_seconds.count() >= XBEE_PACKET_DELAY) {
+        const float JOHN_SCALE = 70.0;
+        for (OurRobot* r : _state.self) {
+            if (r->visible || _manualID == r->shell()) {
+
+                std::cout << "EHH GOOD MORNING FROM ROBOT" << " " << r->shell() << std::endl;
+                std::cout << r->motionControl()->xvel * JOHN_SCALE << 
+                        " " << r->motionControl()->yvel * JOHN_SCALE << " " 
+                            << r->motionControl()->wvel * JOHN_SCALE<< std::endl;
+
+                ShittyPacket packet2;
+                int16_t robot_id = static_cast<int16_t>(r->shell());  
+                auto xvel = r->motionControl()->xvel * JOHN_SCALE;
+                auto yvel = r->motionControl()->yvel * JOHN_SCALE;
+                auto avel = r->motionControl()->wvel * JOHN_SCALE * 0.25;
+                std::cout <<xvel <<yvel<<avel <<std::endl;
+                packet2.robot_id = robot_id;
+                packet2.robot_x = (int16_t)(xvel);
+                packet2.robot_y = (int16_t)(yvel);
+                packet2.robot_w = (int16_t)(avel);
+                
+                if (_radio) {
+                    _radio->send(packet2.serialize());
+                }        
+            }
+            else {
+                if (r->shell() == 8) {
+                ShittyPacket packet2;
+                int16_t robot_id = static_cast<int16_t>(r->shell());  
+                packet2.robot_id = robot_id;
+                packet2.robot_x = 0;
+                packet2.robot_y = 0;
+                packet2.robot_w = 0;
+                if (_radio) {
+                    _radio->send(packet2.serialize());
+                } 
+                }
+            }  
+        }
+     xbeePacketSentTime = std::chrono::system_clock::now();
+        }
+    usleep(100000);
+
 
     //WFUEDIT
     const JoystickControlValues controlVals = getJoystickControlValues();
@@ -855,7 +911,7 @@ void Processor::sendRadioData() {
         float scaleMovement = 1.0 + (float) controlVals.kickPower/100.0;
         float scaleRotation = 1.0 + (float) controlVals.dribblerPower/50.0;
         
-
+        packet.robot_id = 9;
         packet.robot_x = static_cast<int16_t>(translation.x() * 100.0 * scaleMovement);
         packet.robot_y = static_cast<int16_t>(translation.y() * 100.0 * scaleMovement);
         packet.robot_w = static_cast<int16_t>(controlVals.rotation * 5.0 * scaleRotation);
@@ -891,7 +947,60 @@ void Processor::sendRadioData() {
     if (_radio) {
         _radio->send(*_state.logFrame->mutable_radio_tx());
     }*/
+    /*
+    auto raymond = *_state.logFrame->mutable_radio_tx();
+    // Build a forward packet
+    for (int slot = 0; slot < 6; ++slot) {
+        // Calculate the offset into the @forward_packet for this robot's
+        // control message and cast it to a ControlMessage pointer for easy
+        // access
+        if (slot < raymond.robots_size()) {
+            const Packet::Control& robot = raymond.robots(slot).control();
 
+           // msg->uid = raymond.robots(slot).uid();
+         //   msg->messageType = rtp::RobotTxMessage::ControlMessageType;
+
+           // auto& controlMessage = msg->message.controlMessage;
+            //cout << "velx = " << robot.xvelocity() << "\n";
+            //raymond.robots(slot).uid()
+            // controlMessage.bodyY = static_cast<int16_t>(
+            //     robot.yvelocity() * rtp::ControlMessage::VELOCITY_SCALE_FACTOR);
+            // controlMessage.bodyW = static_cast<int16_t>(
+            //     robot.avelocity() * rtp::ControlMessage::VELOCITY_SCALE_FACTOR);
+
+            // controlMessage.dribbler =
+            //     clamp(static_cast<uint16_t>(robot.dvelocity()) * 2, 0, 255);
+
+            // controlMessage.kickStrength = robot.kcstrength();
+            // controlMessage.shootMode = robot.shootmode();
+            // controlMessage.triggerMode = robot.triggermode();
+            // controlMessage.song = robot.song();
+            std::cout << robot.xvelocity() << std::endl;
+            ShittyPacket packet2;
+            int16_t robot_id = static_cast<int16_t>(raymond.robots(slot).uid());  
+            int16_t xvel = static_cast<int16_t>(robot.xvelocity());
+            int16_t yvel = static_cast<int16_t>(robot.yvelocity());
+            int16_t avel = static_cast<int16_t>(robot.avelocity());
+
+            packet2.robot_id = robot_id;
+            packet2.robot_x = xvel*50;
+            packet2.robot_y = yvel*50;
+            packet2.robot_w = avel;
+            
+            if (_radio) {
+                _radio->send(packet2.serialize());
+            }
+      
+        } else {
+            // empty slot
+          //  msg->uid = rtp::INVALID_ROBOT_UID;
+        }
+    }
+    */
+    
+
+
+    /*
     auto currentTime = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = currentTime - xbeePacketSentTime;
     if (elapsed_seconds.count() >= XBEE_PACKET_DELAY) {
@@ -901,6 +1010,7 @@ void Processor::sendRadioData() {
         // std::cout << "Called the XBEE" << elapsed_seconds << std::endl;
         xbeePacketSentTime = std::chrono::system_clock::now();
     }  
+    */
 }
 
 void Processor::applyJoystickControls(const JoystickControlValues& controlVals,

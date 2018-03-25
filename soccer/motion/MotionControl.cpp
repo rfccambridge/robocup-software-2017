@@ -240,6 +240,10 @@ void MotionControl::_targetBodyVel(Point targetVel) {
     // set control values
     _robot->control->set_xvelocity(targetVel.x());
     _robot->control->set_yvelocity(targetVel.y());
+    //johnedit
+    //std::cout << targetVel.x() << " " << targetVel.y() <<std::endl;johnedit
+    xvel = targetVel.x();
+    yvel = targetVel.y();
 }
 
 Pid* MotionControl::getPid(char controller) {
