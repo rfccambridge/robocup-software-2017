@@ -50,6 +50,7 @@ Field_Dimensions* currentDimensions = &Field_Dimensions::Current_Dimensions;
 int xbeeControlTicks = 0;
 auto xbeePacketSentTime = std::chrono::system_clock::now();
 const double XBEE_PACKET_DELAY = 0.05; // xbee packet delay in seconds
+const bool VERBOSE = false;
 
 void Processor::createConfiguration(Configuration* cfg) {
     robotConfig2008 = new RobotConfig(cfg, "Rev2008");
@@ -783,43 +784,17 @@ void Processor::updateGeometryPacket(const SSL_GeometryFieldSize& fieldSize) {
 }
 
 void Processor::sendRadioData() {
-    
-    /*
-    Packet::RadioTx* tx = _state.logFrame->mutable_radio_tx();
-    tx->set_txmode(Packet::RadioTx::UNICAST);
-    
-    // Halt overrides normal motion control, but not joystick
-    if (_state.gameState.halt()) {
-        // Force all motor speeds to zero
-        for (OurRobot* r : _state.self) {
-            Packet::Control* control = r->control;
-            control->set_xvelocity(0);
-            control->set_yvelocity(0);
-            control->set_avelocity(0);
-            control->set_dvelocity(0);
-            control->set_kcstrength(0);
-            control->set_shootmode(Packet::Control::KICK);
-            control->set_triggermode(Packet::Control::STAND_DOWN);
-            control->set_song(Packet::Control::STOP);
-        }
-    }*/
 
-    
-
-   
+    // Kill switch for robots, by pressing HALT
     if (_state.gameState.halt()) {
         ShittyPacket johnPacket;
-            johnPacket.robot_id = -1;  //this is broadcast to all
+            johnPacket.robot_id = -1;  //this is broadcast to all in firmware
             johnPacket.robot_x = 0;
             johnPacket.robot_y = 0;
             johnPacket.robot_w = 0;
         auto currentTime = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = currentTime - xbeePacketSentTime;
         if (elapsed_seconds.count() >= XBEE_PACKET_DELAY) {
-            if (_radio) {
-                _radio->send(johnPacket.serialize());
-            }  
-            johnPacket.robot_id = 0;
             if (_radio) {
                 _radio->send(johnPacket.serialize());
             }  
@@ -855,42 +830,52 @@ void Processor::sendRadioData() {
         for (OurRobot* r : _state.self) {
             if (r->visible || _manualID == r->shell()) {
 
-                std::cout << "EHH GOOD MORNING FROM ROBOT" << " " << r->shell() << std::endl;
-                std::cout << r->motionControl()->xvel * JOHN_SCALE << 
-                        " " << r->motionControl()->yvel * JOHN_SCALE << " " 
-                            << r->motionControl()->wvel * JOHN_SCALE<< std::endl;
+                if (VERBOSE) {
+                    std::cout << "EHH GOOD MORNING FROM ROBOT" << " " << r->shell() << std::endl;
+                    std::cout << r->motionControl()->xvel * JOHN_SCALE << " " 
+                              << r->motionControl()->yvel * JOHN_SCALE << " " 
+                              << r->motionControl()->wvel * JOHN_SCALE<< std::endl;
+                }
 
+                // Joystick should override the commands given by everyone else
                 ShittyPacket packet2;
-                int16_t robot_id = static_cast<int16_t>(r->shell());  
-                auto xvel = r->motionControl()->xvel * JOHN_SCALE;
-                auto yvel = r->motionControl()->yvel * JOHN_SCALE;
-                auto avel = r->motionControl()->wvel * JOHN_SCALE * 0.25;
-                std::cout <<xvel <<yvel<<avel <<std::endl;
-                packet2.robot_id = robot_id;
-                packet2.robot_x = (int16_t)(xvel);
-                packet2.robot_y = (int16_t)(yvel);
-                packet2.robot_w = (int16_t)(avel);
-                
-                if (_radio) {
-                    _radio->send(packet2.serialize());
-                }        
+                if (_manualID != r->shell()) {
+                    int16_t robot_id = static_cast<int16_t>(r->shell());  
+                    auto xvel = r->motionControl()->xvel * JOHN_SCALE;
+                    auto yvel = r->motionControl()->yvel * JOHN_SCALE;
+                    auto avel = r->motionControl()->wvel * JOHN_SCALE * 0.25;
+                    packet2.robot_id = robot_id;
+                    packet2.robot_x = (int16_t)(xvel);
+                    packet2.robot_y = (int16_t)(yvel);
+                    packet2.robot_w = (int16_t)(avel);
+                } else {
+                    const JoystickControlValues controlVals = getJoystickControlValues();
+                    Geometry2d::Point translation(controlVals.translation);
+                    float scaleMovement = 1.0 + (float) controlVals.kickPower/100.0;
+                    float scaleRotation = 1.0 + (float) controlVals.dribblerPower/50.0;
+                    packet2.robot_id = _manualID;
+                    packet2.robot_x = static_cast<int16_t>(translation.x() * 100.0 * scaleMovement);
+                    packet2.robot_y = static_cast<int16_t>(translation.y() * 100.0 * scaleMovement);
+                    packet2.robot_w = static_cast<int16_t>(controlVals.rotation * 5.0 * scaleRotation);
+                }
+                if (_radio) _radio->send(packet2.serialize());
             }
             else {
                 if (r->shell() == 8) {
-                ShittyPacket packet2;
-                int16_t robot_id = static_cast<int16_t>(r->shell());  
-                packet2.robot_id = robot_id;
-                packet2.robot_x = 0;
-                packet2.robot_y = 0;
-                packet2.robot_w = 0;
-                if (_radio) {
-                    _radio->send(packet2.serialize());
-                } 
+                    ShittyPacket packet2;
+                    int16_t robot_id = static_cast<int16_t>(r->shell());  
+                    packet2.robot_id = robot_id;
+                    packet2.robot_x = 0;
+                    packet2.robot_y = 0;
+                    packet2.robot_w = 0;
+                    if (_radio) {
+                        _radio->send(packet2.serialize());
+                    } 
                 }
             }  
         }
-     xbeePacketSentTime = std::chrono::system_clock::now();
-        }
+        xbeePacketSentTime = std::chrono::system_clock::now();
+    }
     usleep(100000);
 
 
@@ -916,89 +901,6 @@ void Processor::sendRadioData() {
         packet.robot_y = static_cast<int16_t>(translation.y() * 100.0 * scaleMovement);
         packet.robot_w = static_cast<int16_t>(controlVals.rotation * 5.0 * scaleRotation);
     }
-    //std::cout << "Current kickpower " << controlVals.kickPower << std::endl;
-    //std::cout << "Current dribblerpower " << controlVals.dribblerPower << std::endl; 
-
-    // use world coordinates if we can see the robot
-    // otherwise default to body coordinates
-    /*
-    if (robot && robot->visible && _useFieldOrientedManualDrive) {
-        translation.rotate(-M_PI / 2 - robot->angle);
-    }*/
-
-
-    /*
-    for (const auto& pair : _robotConfigs) {
-        auto config = tx->add_configs();
-        config->set_key(pair.first);
-        config->set_value(pair.second);
-        config->set_key_name(
-            DebugCommunication::CONFIG_TO_STRING.at(pair.first));
-    }
-
-    for (const auto& debugResponse : _robotDebugResponses) {
-        auto debugCommunication = tx->add_debug_communication();
-        debugCommunication->set_key(debugResponse);
-        debugCommunication->set_key_name(
-            DebugCommunication::DEBUGRESPONSE_TO_STRING.at(debugResponse));
-    }*/
-    
-    /*
-    if (_radio) {
-        _radio->send(*_state.logFrame->mutable_radio_tx());
-    }*/
-    /*
-    auto raymond = *_state.logFrame->mutable_radio_tx();
-    // Build a forward packet
-    for (int slot = 0; slot < 6; ++slot) {
-        // Calculate the offset into the @forward_packet for this robot's
-        // control message and cast it to a ControlMessage pointer for easy
-        // access
-        if (slot < raymond.robots_size()) {
-            const Packet::Control& robot = raymond.robots(slot).control();
-
-           // msg->uid = raymond.robots(slot).uid();
-         //   msg->messageType = rtp::RobotTxMessage::ControlMessageType;
-
-           // auto& controlMessage = msg->message.controlMessage;
-            //cout << "velx = " << robot.xvelocity() << "\n";
-            //raymond.robots(slot).uid()
-            // controlMessage.bodyY = static_cast<int16_t>(
-            //     robot.yvelocity() * rtp::ControlMessage::VELOCITY_SCALE_FACTOR);
-            // controlMessage.bodyW = static_cast<int16_t>(
-            //     robot.avelocity() * rtp::ControlMessage::VELOCITY_SCALE_FACTOR);
-
-            // controlMessage.dribbler =
-            //     clamp(static_cast<uint16_t>(robot.dvelocity()) * 2, 0, 255);
-
-            // controlMessage.kickStrength = robot.kcstrength();
-            // controlMessage.shootMode = robot.shootmode();
-            // controlMessage.triggerMode = robot.triggermode();
-            // controlMessage.song = robot.song();
-            std::cout << robot.xvelocity() << std::endl;
-            ShittyPacket packet2;
-            int16_t robot_id = static_cast<int16_t>(raymond.robots(slot).uid());  
-            int16_t xvel = static_cast<int16_t>(robot.xvelocity());
-            int16_t yvel = static_cast<int16_t>(robot.yvelocity());
-            int16_t avel = static_cast<int16_t>(robot.avelocity());
-
-            packet2.robot_id = robot_id;
-            packet2.robot_x = xvel*50;
-            packet2.robot_y = yvel*50;
-            packet2.robot_w = avel;
-            
-            if (_radio) {
-                _radio->send(packet2.serialize());
-            }
-      
-        } else {
-            // empty slot
-          //  msg->uid = rtp::INVALID_ROBOT_UID;
-        }
-    }
-    */
-    
-
 
     /*
     auto currentTime = std::chrono::system_clock::now();
