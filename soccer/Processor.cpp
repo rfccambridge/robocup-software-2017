@@ -784,48 +784,44 @@ void Processor::updateGeometryPacket(const SSL_GeometryFieldSize& fieldSize) {
 }
 
 void Processor::sendRadioData() {
-
-    // Kill switch for robots, by pressing HALT
-    if (_state.gameState.halt()) {
-        ShittyPacket johnPacket;
-            johnPacket.robot_id = -1;  //this is broadcast to all in firmware
-            johnPacket.robot_x = 0;
-            johnPacket.robot_y = 0;
-            johnPacket.robot_w = 0;
-        auto currentTime = std::chrono::system_clock::now();
-        std::chrono::duration<double> elapsed_seconds = currentTime - xbeePacketSentTime;
-        if (elapsed_seconds.count() >= XBEE_PACKET_DELAY) {
-            if (_radio) {
-                _radio->send(johnPacket.serialize());
-            }  
-            xbeePacketSentTime = std::chrono::system_clock::now();
-        }
-    }
-
-    // Add RadioTx commands for visible robots and apply joystick input
-    
-    /*for (OurRobot* r : _state.self) {
-        if (r->visible || _manualID == r->shell()) {
-            std::cout << "VISIBLE BOYS" <<std::endl;
-            Packet::Robot* txRobot = tx->add_robots();
-
-            // Copy motor commands.
-            // Even if we are using the joystick, this sets robot_id and the
-            // number of motors.
-            //txRobot->CopyFrom(r->robotPacket);
-            //std::cout << r->xvelocity() << "\n";
-
-            // if (r->shell() == _manualID) {
-            //     const JoystickControlValues controlVals =
-            //         getJoystickControlValues();
-            //     applyJoystickControls(controlVals, txRobot->mutable_control(),
-            //                           r);
-            // }
-        }
-    }*/
     auto currentTime = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = currentTime - xbeePacketSentTime;
-    if (elapsed_seconds.count() >= XBEE_PACKET_DELAY) {
+    if (elapsed_seconds.count() >= XBEE_PACKET_DELAY*5) {
+        printf("packet sent time %u\n", std::chrono::system_clock::now());
+        // Kill switch for robots, by pressing HALT
+        if (_state.gameState.halt()) {
+            ShittyPacket johnPacket;
+                johnPacket.robot_id = -1;  //this is broadcast to all in firmware
+                johnPacket.robot_x = 0;
+                johnPacket.robot_y = 0;
+                johnPacket.robot_w = 0;
+                if (_radio) {
+                    _radio->send(johnPacket.serialize());
+                }  
+        }
+
+        // Add RadioTx commands for visible robots and apply joystick input
+        
+        /*for (OurRobot* r : _state.self) {
+            if (r->visible || _manualID == r->shell()) {
+                std::cout << "VISIBLE BOYS" <<std::endl;
+                Packet::Robot* txRobot = tx->add_robots();
+
+                // Copy motor commands.
+                // Even if we are using the joystick, this sets robot_id and the
+                // number of motors.
+                //txRobot->CopyFrom(r->robotPacket);
+                //std::cout << r->xvelocity() << "\n";
+
+                // if (r->shell() == _manualID) {
+                //     const JoystickControlValues controlVals =
+                //         getJoystickControlValues();
+                //     applyJoystickControls(controlVals, txRobot->mutable_control(),
+                //                           r);
+                // }
+            }
+        }*/
+
         const float JOHN_SCALE = 70.0;
         for (OurRobot* r : _state.self) {
             if (r->visible || _manualID == r->shell()) {
@@ -875,32 +871,33 @@ void Processor::sendRadioData() {
             }  
         }
         xbeePacketSentTime = std::chrono::system_clock::now();
-    }
-    usleep(100000);
-
-
-    //WFUEDIT
-    const JoystickControlValues controlVals = getJoystickControlValues();
-    Geometry2d::Point translation(controlVals.translation);
-
-    ShittyPacket packet;
-    if (_state.gameState.halt()) {
-        packet.robot_x = 0;
-        packet.robot_y = 0;
-        packet.robot_w = 0;  
-        packet.robot_id = 0; 
     } else {
-        // translation has a max of 0.7 on each scale
-        // max kickpower 255
-        // max dribblerpower 128
-        float scaleMovement = 1.0 + (float) controlVals.kickPower/100.0;
-        float scaleRotation = 1.0 + (float) controlVals.dribblerPower/50.0;
-        
-        packet.robot_id = 9;
-        packet.robot_x = static_cast<int16_t>(translation.x() * 100.0 * scaleMovement);
-        packet.robot_y = static_cast<int16_t>(translation.y() * 100.0 * scaleMovement);
-        packet.robot_w = static_cast<int16_t>(controlVals.rotation * 5.0 * scaleRotation);
+        return;
     }
+
+
+    // //WFUEDIT
+    // const JoystickControlValues controlVals = getJoystickControlValues();
+    // Geometry2d::Point translation(controlVals.translation);
+
+    // ShittyPacket packet;
+    // if (_state.gameState.halt()) {
+    //     packet.robot_x = 0;
+    //     packet.robot_y = 0;
+    //     packet.robot_w = 0;  
+    //     packet.robot_id = 0; 
+    // } else {
+    //     // translation has a max of 0.7 on each scale
+    //     // max kickpower 255
+    //     // max dribblerpower 128
+    //     float scaleMovement = 1.0 + (float) controlVals.kickPower/100.0;
+    //     float scaleRotation = 1.0 + (float) controlVals.dribblerPower/50.0;
+        
+    //     packet.robot_id = 9;
+    //     packet.robot_x = static_cast<int16_t>(translation.x() * 100.0 * scaleMovement);
+    //     packet.robot_y = static_cast<int16_t>(translation.y() * 100.0 * scaleMovement);
+    //     packet.robot_w = static_cast<int16_t>(controlVals.rotation * 5.0 * scaleRotation);
+    // }
 
     /*
     auto currentTime = std::chrono::system_clock::now();
