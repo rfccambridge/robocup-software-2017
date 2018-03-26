@@ -148,10 +148,10 @@ void BallTracker::run(const vector<BallObservation>& obs, SystemState* state) {
         // track
         if ((now - _lastTrackTime) >= Drop_Real_Track_Time) {
             _ballFilter.reset();
-            state->ball.valid = false;
+            state->ball.valid = true;
         }
     } else {
-        state->ball.valid = false;
+        state->ball.valid = true;
     }
 
     // Update possible tracks
